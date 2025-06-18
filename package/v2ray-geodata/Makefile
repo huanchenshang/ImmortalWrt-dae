@@ -43,8 +43,8 @@ define Package/v2ray-geodata-updater
   LICENSE:=GPL-3.0
 endef
 
-GEOIP_URL:=https://github.com/Loyalsoldier/geoip/releases/latest/download/geoip.dat
-GEOSITE_URL:=https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat
+GEOIP_URL:=https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat
+GEOSITE_URL:=https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat
 
 define Build/Compile
 	( \
