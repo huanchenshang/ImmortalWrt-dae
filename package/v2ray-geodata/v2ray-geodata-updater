@@ -48,12 +48,12 @@ download_proxy() {
 }
 
 #GEOIP_URL=$(curl -sL https://api.github.com/repos/v2ray/geoip/releases/latest | jq -r '.assets[].browser_download_url')
-GEOIP_URL="https://github.com/Loyalsoldier/geoip/releases/latest/download/geoip.dat"
-GEOIP_SHA256SUM_URL="https://github.com/Loyalsoldier/geoip/releases/latest/download/geoip.dat.sha256sum"
+GEOIP_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat"
+GEOIP_SHA256SUM_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip.dat.sha256sum"
 
 #GEOSITE_URL=$(curl -sL https://api.github.com/repos/v2ray/domain-list-community/releases/latest | jq -r '.assets[].browser_download_url')
-GEOSITE_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat"
-GEOSITE_SHA256SUM_URL="https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat.sha256sum"
+GEOSITE_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+GEOSITE_SHA256SUM_URL="https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat.sha256sum"
 
 GEOIP_PATH=/usr/share/v2ray/geoip.dat
 GEOSITE_PATH=/usr/share/v2ray/geosite.dat
