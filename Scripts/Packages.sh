@@ -45,7 +45,7 @@ UPDATE_PACKAGE() {
 # UPDATE_PACKAGE "open-app-filter" "destan19/OpenAppFilter" "master" "" "luci-app-appfilter oaf" 这样会把原有的open-app-filter，luci-app-appfilter，oaf相关组件删除，不会出现coremark错误。
 
 # UPDATE_PACKAGE "包名" "项目地址" "项目分支" "pkg/name，可选，pkg为从大杂烩中单独提取包名插件；name为重命名为包名"
-UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-24.10"
+#UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-24.10"
 #UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "js"
 
 UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
@@ -136,9 +136,9 @@ cp -r $GITHUB_WORKSPACE/package/* ./
 sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)/g' ../feeds/packages/utils/coremark/Makefile
 
 #修改字体
-argon_css_file=$(find ./luci-theme-argon/ -type f -name "cascade.css")
-sed -i "/^.main .main-left .nav li a {/,/^}/ { /font-weight: bolder/d }" $argon_css_file
-sed -i '/^\[data-page="admin-system-opkg"\] #maincontent>.container {/,/}/ s/font-weight: 600;/font-weight: normal;/' $argon_css_file
+#argon_css_file=$(find ./luci-theme-argon/ -type f -name "cascade.css")
+#sed -i "/^.main .main-left .nav li a {/,/^}/ { /font-weight: bolder/d }" $argon_css_file
+#sed -i '/^\[data-page="admin-system-opkg"\] #maincontent>.container {/,/}/ s/font-weight: 600;/font-weight: normal;/' $argon_css_file
 
 #修复daed/Makefile
 #rm -rf luci-app-daed/daed/Makefile && cp -r $GITHUB_WORKSPACE/patches/daed/Makefile luci-app-daed/daed/
