@@ -24,7 +24,7 @@ UPDATE_PACKAGE() {
 				echo "Delete directory: $DIR"
 			done <<< "$FOUND_DIRS"
 		else
-			echo "Not fonud directory: $NAME"
+			echo "Not found directory: $NAME"
 		fi
 	done
 
@@ -39,6 +39,37 @@ UPDATE_PACKAGE() {
 		mv -f $REPO_NAME $PKG_NAME
 	fi
 }
+
+# Git稀疏克隆，只克隆指定目录到本地
+git_sparse_clone() {
+	local branch="$1" repourl="$2" && shift 2
+	local repodir=$(echo $repourl | awk -F '/' '{print $(NF)}')
+
+	# 删除目标目录中已存在的包，保持与UPDATE_PACKAGE一致
+	for dir in "$@"; do
+		echo "Search directory: $dir"
+		local FOUND_DIRS=$(find ../package/ ../feeds/luci/ ../feeds/packages/ -maxdepth 3 -type d -iname "*$dir*" 2>/dev/null)
+		if [ -n "$FOUND_DIRS" ]; then
+			while read -r DIR; do
+				rm -rf "$DIR"
+				echo "Delete directory: $DIR"
+			done <<< "$FOUND_DIRS"
+		else
+			echo "Not found directory: $dir"
+		fi
+	done
+
+	# 执行稀疏克隆
+	git clone --depth=1 -b "$branch" --single-branch --filter=blob:none --sparse "$repourl"
+	cd "$repodir" && git sparse-checkout set "$@"
+	mkdir -p ../package
+	mv -f "$@" ../package
+	cd .. && rm -rf "$repodir"
+}
+
+# 稀疏克隆调用
+git_sparse_clone main https://github.com/kenzok8/small-package taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex
+# git_sparse_clone main https://github.com/kiddin9/kwrt-packages natter2 luci-app-natter2 luci-app-cloudflarespeedtest luci-app-nginx luci-app-nfs openwrt-caddy
 
 # 调用示例
 # UPDATE_PACKAGE "OpenAppFilter" "destan19/OpenAppFilter" "master" "" "custom_name1 custom_name2"

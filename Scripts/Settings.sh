@@ -69,3 +69,13 @@ if [[ $WRT_TARGET == *"QUALCOMMAX"* ]]; then
 		echo "qualcommax set up nowifi successfully!"
 	fi
 fi
+
+# QuickStart
+echo "CONFIG_PACKAGE_taskd=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-lib-xterm=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-lib-taskd=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-store=y" >> ./.config
+echo "CONFIG_PACKAGE_quickstart=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-quickstart=y" >> ./.config
+echo "CONFIG_PACKAGE_luci-app-istorex=y" >> ./.config
+
