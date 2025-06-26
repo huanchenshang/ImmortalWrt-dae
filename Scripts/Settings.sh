@@ -69,30 +69,3 @@ if [[ $WRT_TARGET == *"QUALCOMMAX"* ]]; then
 		echo "qualcommax set up nowifi successfully!"
 	fi
 fi
-
-# 修正部分包的Makefile格式
-fix_mkpkg_format_invalid() {
-        if [ -f ./package/luci-app-quickstart/Makefile ]; then
-            sed -i 's/PKG_VERSION:=0\.8\.20-r1/PKG_VERSION:=0\.8\.20/g' $BUILD_DIR/feeds/small8/luci-app-quickstart/Makefile
-            sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=r1/g' $BUILD_DIR/feeds/small8/luci-app-quickstart/Makefile
-        fi
-        if [ -f ./package/luci-app-store/Makefile ]; then
-            sed -i 's/PKG_VERSION:=0\.1\.29-5/PKG_VERSION:=0\.1\.29/g' $BUILD_DIR/feeds/small8/luci-app-store/Makefile
-            sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=5/g' $BUILD_DIR/feeds/small8/luci-app-store/Makefile
-        fi
-}
-
-# 修复 quickstart 前端文件
-fix_quickstart() {
-    local qs_index_path="./package/luci-app-quickstart/htdocs/luci-static/quickstart/index.js"
-    local fix_path="./patches/quickstart_index.js"
-    # 用补丁覆盖 quickstart 前端文件
-    if [ -f "$qs_index_path" ] && [ -f "$fix_path" ]; then
-        cat "$fix_path" >"$qs_index_path"
-    else
-        echo "Quickstart index.js 或补丁文件不存在，请检查路径是否正确。"
-    fi
-}
-
-fix_mkpkg_format_invalid
-fix_quickstart
