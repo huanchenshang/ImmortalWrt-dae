@@ -69,3 +69,17 @@ if [[ $WRT_TARGET == *"QUALCOMMAX"* ]]; then
 		echo "qualcommax set up nowifi successfully!"
 	fi
 fi
+
+# 修复 luci-app-quickstart 前端文件
+fix_quickstart() {
+    local qs_index_path="./luci-app-quickstart/htdocs/luci-static/quickstart/index.js"
+    local fix_path="$BASE_PATH/patches/quickstart_index.js"
+    # 用补丁覆盖 quickstart 前端文件
+    if [ -f "$qs_index_path" ] && [ -f "$fix_path" ]; then
+        cat "$fix_path" >"$qs_index_path"
+    else
+        echo "Quickstart index.js 或补丁文件不存在，请检查路径是否正确。"
+    fi
+}
+
+fix_quickstart
