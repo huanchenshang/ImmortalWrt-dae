@@ -72,13 +72,13 @@ UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 #UPDATE_PACKAGE "luci-app-pushbot" "zzsj0928/luci-app-pushbot" "master"
 
 #quickstart
-UPDATE_PACKAGE "taskd" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-lib-xterm" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-lib-taskd" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-app-store" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "quickstart" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-app-quickstart" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-app-istorex" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "taskd" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-lib-xterm" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-lib-taskd" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-app-store" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "quickstart" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-app-quickstart" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-app-istorex" "kenzok8/small-package" "main" "pkg"
 
 #更新软件包版本
 UPDATE_VERSION() {
