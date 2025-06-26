@@ -80,7 +80,6 @@ fix_mkpkg_format_invalid() {
             sed -i 's/PKG_VERSION:=0\.1\.29-5/PKG_VERSION:=0\.1\.29/g' $BUILD_DIR/feeds/small8/luci-app-store/Makefile
             sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=5/g' $BUILD_DIR/feeds/small8/luci-app-store/Makefile
         fi
-    fi
 }
 
 # 修复 quickstart 前端文件
