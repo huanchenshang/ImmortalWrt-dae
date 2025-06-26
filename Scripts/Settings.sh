@@ -72,7 +72,7 @@ fi
 
 # 修复 luci-app-quickstart 前端文件
 fix_quickstart() {
-    local qs_index_path="./luci-app-quickstart/htdocs/luci-static/quickstart/index.js"
+    local qs_index_path="$GITHUB_WORKSPACE/Scripts/luci-app-quickstart/htdocs/luci-static/quickstart/index.js"
     local fix_path="$BASE_PATH/patches/quickstart_index.js"
     # 用补丁覆盖 quickstart 前端文件
     if [ -f "$qs_index_path" ] && [ -f "$fix_path" ]; then
