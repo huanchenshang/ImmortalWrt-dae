@@ -130,19 +130,6 @@ CONFIG_KERNEL_SKB_RECYCLER_MULTI_CPU=y
 EOF
 }
 
-# 修复 quickstart 前端文件
-fix_quickstart() {
-    # 适配 package 目录下的 luci-app-quickstart
-    local qs_index_path="package/luci-app-quickstart/htdocs/luci-static/quickstart/index.js"
-    local fix_path="$BASE_PATH/patches/quickstart_index.js"
-    # 用补丁覆盖 quickstart 前端文件
-    if [ -f "$qs_index_path" ] && [ -f "$fix_path" ]; then
-        cat "$fix_path" >"$qs_index_path"
-    else
-        echo "Quickstart index.js 或补丁文件不存在，请检查路径是否正确。"
-    fi
-}
-
 function generate_config() {
   config_file=".config"
   #如配置文件已存在
@@ -161,7 +148,6 @@ function generate_config() {
   set_kernel_size
   #增加内核选项
   cat_kernel_config "target/linux/qualcommax/${target}/config-default"
-  fix_quickstart
 }
 
 
