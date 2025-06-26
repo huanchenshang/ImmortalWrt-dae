@@ -71,6 +71,14 @@ UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 #UPDATE_PACKAGE "viking" "VIKINGYFY/packages" "main" "" "luci-app-timewol luci-app-wolplus"
 #UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
 
+#quickstart
+UPDATE_PACKAGE "taskd" "kenzok8/small-package" "main" "pkg"
+UPDATE_PACKAGE "luci-lib-xterm" "kenzok8/small-package" "main" "pkg"
+UPDATE_PACKAGE "luci-lib-taskd" "kenzok8/small-package" "main" "pkg"
+UPDATE_PACKAGE "luci-app-store" "kenzok8/small-package" "main" "pkg"
+UPDATE_PACKAGE "quickstart" "kenzok8/small-package" "main" "pkg"
+UPDATE_PACKAGE "luci-app-quickstart" "kenzok8/small-package" "main" "pkg"
+UPDATE_PACKAGE "luci-app-istorex" "kenzok8/small-package" "main" "pkg"
 
 UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "master"
 #UPDATE_PACKAGE "luci-app-pushbot" "zzsj0928/luci-app-pushbot" "master"
@@ -119,16 +127,6 @@ UPDATE_VERSION() {
 #UPDATE_VERSION "sing-box"
 #UPDATE_VERSION "tailscale"
 
-# Git稀疏克隆，只克隆指定目录到本地
-function git_sparse_clone() {
-	branch="$1" repourl="$2" && shift 2
-	git clone --depth=1 -b $branch --single-branch --filter=blob:none --sparse $repourl
-	repodir=$(echo $repourl | awk -F '/' '{print $(NF)}')
-	cd $repodir && git sparse-checkout set $@
-	mv -f $@ ../package
-	cd .. && rm -rf $repodir
-}
-
 #不编译xray-core
 sed -i 's/+xray-core//' luci-app-passwall2/Makefile
 
@@ -138,7 +136,7 @@ rm -rf ../feeds/packages/net/{v2ray-geodata,dae*}
 
 # 稀疏克隆调用
 git_sparse_clone main https://github.com/kenzok8/small-package taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart luci-app-quickstart luci-app-istorex
-# git_sparse_clone main https://github.com/kiddin9/kwrt-packages natter2 luci-app-natter2 luci-app-cloudflarespeedtest luci-app-nginx luci-app-nfs openwrt-caddy
+
 
 #更新golang为最新版
 rm -rf ../feeds/packages/lang/golang
