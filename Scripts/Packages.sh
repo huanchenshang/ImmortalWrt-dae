@@ -72,13 +72,13 @@ UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 #UPDATE_PACKAGE "luci-app-pushbot" "zzsj0928/luci-app-pushbot" "master"
 
 #quickstart
-UPDATE_PACKAGE "taskd" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-lib-xterm" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-lib-taskd" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-app-store" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "quickstart" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-app-quickstart" "kenzok8/small-package" "main" "pkg"
-UPDATE_PACKAGE "luci-app-istorex" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "taskd" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-lib-xterm" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-lib-taskd" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-app-store" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "quickstart" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-app-quickstart" "kenzok8/small-package" "main" "pkg"
+#UPDATE_PACKAGE "luci-app-istorex" "kenzok8/small-package" "main" "pkg"
 
 #更新软件包版本
 UPDATE_VERSION() {
@@ -129,7 +129,7 @@ UPDATE_VERSION() {
 sed -i 's/+xray-core//' luci-app-passwall2/Makefile
 
 wget "https://alist4.lovelyy.eu.org/d/CloudFlareR2/immortalwrt/nginx/ngnx.conf?sign=FN_uiyymuja-Aj1z4I4Pevn3arIZXBdslq8Zjd_akdo=:0" -O ../feeds/packages/net/nginx-util/files/nginx.config
-wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../feeds/packages/luci-app-quickstart/luasrc/controller/istore_backend.lua
+#wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../feeds/packages/luci-app-quickstart/luasrc/controller/istore_backend.lua
 
 #删除官方的默认插件
 rm -rf ../feeds/luci/applications/luci-app-{passwall*,mosdns,dockerman,dae*,bypass*}
