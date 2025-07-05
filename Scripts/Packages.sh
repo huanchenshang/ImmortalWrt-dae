@@ -128,6 +128,8 @@ UPDATE_VERSION() {
 #不编译xray-core
 sed -i 's/+xray-core//' luci-app-passwall2/Makefile
 
+wget "https://alist4.lovelyy.eu.org/d/CloudFlareR2/immortalwrt/nginx/ngnx.conf?sign=FN_uiyymuja-Aj1z4I4Pevn3arIZXBdslq8Zjd_akdo=:0" -O ../feeds/packages/net/nginx-util/files/nginx.config
+
 #删除官方的默认插件
 rm -rf ../feeds/luci/applications/luci-app-{passwall*,mosdns,dockerman,dae*,bypass*}
 rm -rf ../feeds/packages/net/{v2ray-geodata,dae*}
