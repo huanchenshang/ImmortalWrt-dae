@@ -69,20 +69,3 @@ if [[ $WRT_TARGET == *"QUALCOMMAX"* ]]; then
 		echo "qualcommax set up nowifi successfully!"
 	fi
 fi
-
-# 调整部分菜单位置（如需调整可取消注释）
-update_menu_location() {
-    # local samba4_path="$BUILD_DIR/feeds/luci/applications/luci-app-samba4/root/usr/share/luci/menu.d/luci-app-samba4.json"
-    # if [ -d "$(dirname "$samba4_path")" ] && [ -f "$samba4_path" ]; then
-    #     sed -i 's/nas/services/g' "$samba4_path"
-    # fi
-    local ksmbd_path="$BUILD_DIR/feeds/luci/applications/luci-app-ksmbd/root/usr/share/luci/menu.d/luci-app-ksmbd.json"
-    if [ -d "$(dirname "$ksmbd_path")" ] && [ -f "$ksmbd_path" ]; then
-        sed -i 's/services/nas/g' "$ksmbd_path"
-    fi
-    local tailscale_path="$BUILD_DIR/feeds/small8/luci-app-tailscale/root/usr/share/luci/menu.d/luci-app-tailscale.json"
-    if [ -d "$(dirname "$tailscale_path")" ] && [ -f "$tailscale_path" ]; then
-        sed -i 's/services/vpn/g' "$tailscale_path"
-    fi
-}
-update_menu_location
