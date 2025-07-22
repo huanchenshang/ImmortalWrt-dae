@@ -80,6 +80,10 @@ UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 #UPDATE_PACKAGE "luci-app-quickstart" "kenzok8/small-package" "main" "pkg"
 #UPDATE_PACKAGE "luci-app-istorex" "kenzok8/small-package" "main" "pkg"
 
+#unishare
+UPDATE_PACKAGE "unishare" "kenzok8/small-package" "main" "pkg"
+UPDATE_PACKAGE "luci-app-unishare" "kenzok8/small-package" "main" "pkg"
+
 #更新软件包版本
 UPDATE_VERSION() {
 	local PKG_NAME=$1
