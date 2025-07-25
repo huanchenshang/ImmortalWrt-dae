@@ -9,8 +9,8 @@ PKG_VERSION:=$(shell date "+%Y.%m.%d")
 PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-#PKG_SOURCE_URL:=https://github.com/daeuniverse/dae.git
-PKG_SOURCE_URL:=https://github.com/davidtall/dae.git
+PKG_SOURCE_URL:=https://github.com/daeuniverse/dae.git
+#PKG_SOURCE_URL:=https://github.com/davidtall/dae.git
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=$(shell git ls-remote $(PKG_SOURCE_URL) HEAD | cut -c1-7)
 PKG_MIRROR_HASH:=skip
@@ -71,15 +71,16 @@ define Package/dae/conffiles
 /etc/config/dae
 endef
 
-#define Build/Prepare
-#	( \
+define Build/Prepare
+	( \
 		rm -rf $(PKG_BUILD_DIR) && git clone https://github.com/daeuniverse/dae $(PKG_BUILD_DIR) && git -C $(PKG_BUILD_DIR) checkout master ; \
 		pushd $(PKG_BUILD_DIR) ; \
 		git submodule update --init ; \
+		wget -qO - https://github.com/davidtall/dae/commit/da9a4b9.patch | patch -p1 ; \
 		go mod tidy ; \
 		popd ; \
 	)
-#endef
+endef
 
 DAE_CFLAGS:= \
 	-O2 -Wall -Werror \
