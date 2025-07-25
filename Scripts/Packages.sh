@@ -183,3 +183,19 @@ sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/file
     fi
 }
 install_opkg_distfeeds
+
+# 修正部分包的Makefile格式
+fix_mkpkg_format_invalid() {
+    if [ -f ../feeds/packages/luci-lib-taskd/Makefile ]; then
+        sed -i 's/>=1\.0\.3-1/>=1\.0\.3-r1/g' ../feeds/packages/luci-lib-taskd/Makefile
+    fi
+    if [ -f ../feeds/packages/luci-app-quickstart/Makefile ]; then
+        sed -i 's/PKG_VERSION:=0\.8\.16-1/PKG_VERSION:=0\.8\.16/g' ../feeds/packages/luci-app-quickstart/Makefile
+        sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' ../feeds/packages/luci-app-quickstart/Makefile
+    fi
+    if [ -f ../feeds/packages/luci-app-store/Makefile ]; then
+        sed -i 's/PKG_VERSION:=0\.1\.27-1/PKG_VERSION:=0\.1\.27/g' ../feeds/packages/luci-app-store/Makefile
+        sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' ../feeds/packages/luci-app-store/Makefile
+    fi
+}
+fix_mkpkg_format_invalid
