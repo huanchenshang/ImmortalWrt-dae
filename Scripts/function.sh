@@ -141,6 +141,11 @@ function generate_config() {
     remove_wifi $target
   fi
 
+  #ipk仓库
+  if [[ "${GITHUB_REPOSITORY,,}" == *"openwrt-ci-ipk"* ]]; then
+    echo "CONFIG_USE_APK=n" >> $config_file
+  fi
+
   set_nss_driver $config_file
   #增加ebpf
   cat_ebpf_config $config_file
@@ -149,9 +154,3 @@ function generate_config() {
   #增加内核选项
   cat_kernel_config "target/linux/qualcommax/${target}/config-default"
 }
-
-
-
-
-
-
