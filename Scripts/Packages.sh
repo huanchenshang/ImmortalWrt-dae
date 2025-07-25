@@ -172,7 +172,6 @@ src/gz openwrt_routing https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT
 src/gz openwrt_telephony https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/telephony/
 src/gz openwrt_kiddin9 https://dl.openwrt.ai/releases/24.10/packages/aarch64_cortex-a53/kiddin9/
 EOF
-
         sed -i "/define Package\/default-settings\/install/a\\
 \\t\$(INSTALL_DIR) \$(1)/etc\\n\
 \t\$(INSTALL_DATA) ./files/99-distfeeds.conf \$(1)/etc/99-distfeeds.conf\n" $emortal_def_dir/Makefile
@@ -198,4 +197,4 @@ fix_mkpkg_format_invalid() {
         sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' ../feeds/packages/luci-app-store/Makefile
     fi
 }
-fix_mkpkg_format_invalid
+#fix_mkpkg_format_invalid
