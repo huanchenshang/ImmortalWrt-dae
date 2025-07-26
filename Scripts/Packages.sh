@@ -134,7 +134,7 @@ UPDATE_VERSION() {
 sed -i 's/+xray-core//' luci-app-passwall2/Makefile
 
 wget "https://gist.githubusercontent.com/huanchenshang/e43c0ccf59cd9c16693887fd8e889822/raw/nginx.config" -O ../feeds/packages/net/nginx-util/files/nginx.config
-wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../feeds/packages/luci-app-quickstart/luasrc/controller/istore_backend.lua
+wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../package/luci-app-quickstart/luasrc/controller/istore_backend.lua
 
 #删除官方的默认插件
 rm -rf ../feeds/luci/applications/luci-app-{passwall*,mosdns,dockerman,dae*,bypass*}
@@ -182,19 +182,3 @@ sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/file
     fi
 }
 install_opkg_distfeeds
-
-# 修正部分包的Makefile格式
-fix_mkpkg_format_invalid() {
-    if [ -f ../feeds/packages/luci-lib-taskd/Makefile ]; then
-        sed -i 's/>=1\.0\.3-1/>=1\.0\.3-r1/g' ../feeds/packages/luci-lib-taskd/Makefile
-    fi
-    if [ -f ../feeds/packages/luci-app-quickstart/Makefile ]; then
-        sed -i 's/PKG_VERSION:=0\.8\.16-1/PKG_VERSION:=0\.8\.16/g' ../feeds/packages/luci-app-quickstart/Makefile
-        sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' ../feeds/packages/luci-app-quickstart/Makefile
-    fi
-    if [ -f ../feeds/packages/luci-app-store/Makefile ]; then
-        sed -i 's/PKG_VERSION:=0\.1\.27-1/PKG_VERSION:=0\.1\.27/g' ../feeds/packages/luci-app-store/Makefile
-        sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' ../feeds/packages/luci-app-store/Makefile
-    fi
-}
-#fix_mkpkg_format_invalid
