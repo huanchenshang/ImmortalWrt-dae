@@ -1,6 +1,6 @@
 {
 	"admin/services/dae": {
-		"title": "DAE",
+		"title": "Dae",
 		"action": {
 			"type": "firstchild"
 		},
