@@ -135,7 +135,7 @@ wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa
 
 #删除官方的默认插件
 #rm -rf ../feeds/luci/applications/luci-app-{mosdns,dockerman,bypass*}
-rm -rf ../feeds/packages/net/{v2ray-geodata}
+#rm -rf ../feeds/packages/net/{v2ray-geodata}
 
 #更新golang为最新版
 rm -rf ../feeds/packages/lang/golang
@@ -174,3 +174,21 @@ sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/file
     fi
 }
 install_opkg_distfeeds
+
+# 自定义v2ray-geodata下载
+custom_v2ray_geodata() {
+    local file_path="../feeds/packages/net/v2ray-geodata"
+    # 下载新的Makefile文件并覆盖
+    if [ -d "$file_path" ]; then
+        \rm -f "$file_path/Makefile"
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/Makefile \
+            -o "$file_path/Makefile"
+        # 下载init.sh文件
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/init.sh \
+            -o "$file_path/init.sh"
+        # 下载v2ray-geodata-updater文件
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/v2ray-geodata-updater \
+            -o "$file_path/v2ray-geodata-updater"
+    fi
+}
+custom_v2ray_geodata
