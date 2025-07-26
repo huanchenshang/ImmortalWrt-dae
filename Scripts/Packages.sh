@@ -53,10 +53,10 @@ UPDATE_PACKAGE() {
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 #UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 #UPDATE_PACKAGE "passwall" "xiaorouji/openwrt-passwall" "main" "pkg"
-UPDATE_PACKAGE "passwall2" "xiaorouji/openwrt-passwall2" "main" "pkg"
-UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "master"
+#UPDATE_PACKAGE "passwall2" "xiaorouji/openwrt-passwall2" "main" "pkg"
+#UPDATE_PACKAGE "luci-app-daed" "QiuSimons/luci-app-daed" "master"
 
-UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
+#UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 
 #UPDATE_PACKAGE "alist" "sbwml/luci-app-alist" "main"
 #UPDATE_PACKAGE "ddns-go" "sirpdboy/luci-app-ddns-go" "main"
@@ -130,15 +130,12 @@ UPDATE_VERSION() {
 #UPDATE_VERSION "sing-box"
 #UPDATE_VERSION "tailscale"
 
-#不编译xray-core
-sed -i 's/+xray-core//' luci-app-passwall2/Makefile
-
 wget "https://gist.githubusercontent.com/huanchenshang/e43c0ccf59cd9c16693887fd8e889822/raw/nginx.config" -O ../feeds/packages/net/nginx-util/files/nginx.config
 wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../package/luci-app-quickstart/luasrc/controller/istore_backend.lua
 
 #删除官方的默认插件
-rm -rf ../feeds/luci/applications/luci-app-{passwall*,mosdns,dockerman,dae*,bypass*}
-rm -rf ../feeds/packages/net/{v2ray-geodata,dae*}
+#rm -rf ../feeds/luci/applications/luci-app-{mosdns,dockerman,bypass*}
+rm -rf ../feeds/packages/net/{v2ray-geodata}
 
 #更新golang为最新版
 rm -rf ../feeds/packages/lang/golang
@@ -154,10 +151,6 @@ sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)
 #sed -i "/^.main .main-left .nav li a {/,/^}/ { /font-weight: bolder/d }" $argon_css_file
 #sed -i '/^\[data-page="admin-system-opkg"\] #maincontent>.container {/,/}/ s/font-weight: 600;/font-weight: normal;/' $argon_css_file
 
-#修复daed/Makefile
-#rm -rf luci-app-daed/daed/Makefile && cp -r $GITHUB_WORKSPACE/patches/daed/Makefile luci-app-daed/daed/
-#cat luci-app-daed/daed/Makefile
-
 # 安装opkg distfeeds
 install_opkg_distfeeds() {
     local emortal_def_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/default-settings"
@@ -170,7 +163,6 @@ src/gz openwrt_luci https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/pa
 src/gz openwrt_packages https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/packages/
 src/gz openwrt_routing https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/routing/
 src/gz openwrt_telephony https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/telephony/
-src/gz openwrt_kiddin9 https://dl.openwrt.ai/releases/24.10/packages/aarch64_cortex-a53/kiddin9/
 EOF
         sed -i "/define Package\/default-settings\/install/a\\
 \\t\$(INSTALL_DIR) \$(1)/etc\\n\
