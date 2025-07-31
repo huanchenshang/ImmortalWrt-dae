@@ -176,7 +176,6 @@ EOF
 sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/files/99-default-settings
     fi
 }
-install_opkg_distfeeds
 
 # 自定义v2ray-geodata下载
 custom_v2ray_geodata() {
@@ -194,4 +193,82 @@ custom_v2ray_geodata() {
             -o "$file_path/v2ray-geodata-updater"
     fi
 }
+
+update_diskman() {
+    local path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-diskman"
+    if [ -d "$path" ]; then
+        cd "$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications" || return # 显式路径避免歧义
+        \rm -rf "luci-app-diskman"                        # 直接删除目标目录
+
+        git clone --filter=blob:none --no-checkout https://github.com/lisaac/luci-app-diskman.git diskman || return
+        cd diskman || return
+
+        git sparse-checkout init --cone
+        git sparse-checkout set applications/luci-app-diskman || return # 错误处理
+
+        git checkout --quiet # 静默检出避免冗余输出
+
+        mv applications/luci-app-diskman ../luci-app-diskman || return # 添加错误检查
+        cd .. || return
+        \rm -rf diskman
+        cd "$GITHUB_WORKSPACE/$WRT_DIR"
+
+        sed -i 's/fs-ntfs /fs-ntfs3 /g' "$path/Makefile"
+        sed -i '/ntfs-3g-utils /d' "$path/Makefile"
+    fi
+}
+
+add_quickfile() {
+    local repo_url="https://github.com/sbwml/luci-app-quickfile.git"
+    local target_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/quickfile"
+    if [ -d "$target_dir" ]; then
+        rm -rf "$target_dir"
+    fi
+    git clone --depth 1 "$repo_url" "$target_dir"
+
+    local makefile_path="$target_dir/quickfile/Makefile"
+    if [ -f "$makefile_path" ]; then
+        sed -i '/\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-\$(ARCH_PACKAGES)/c\
+\tif [ "\$(ARCH_PACKAGES)" = "x86_64" ]; then \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-x86_64 \$(1)\/usr\/bin\/quickfile; \\\
+\telse \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-aarch64_generic \$(1)\/usr\/bin\/quickfile; \\\
+\tfi' "$makefile_path"
+    fi
+}
+
+# 修复 gettext 编译问题
+# @description: 当 gettext-full 版本为 0.24.1 时，从 OpenWrt 官方仓库更新 gettext-full 和 bison 的 Makefile 以解决编译问题。
+# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile
+# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile
+fix_gettext_compile() {
+    local gettext_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/package/libs/gettext-full/Makefile"
+    local bison_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/tools/bison/Makefile"
+
+    # 检查 gettext-full 的 Makefile 是否存在并且版本是否为 0.24.1
+    if [ -f "$gettext_makefile_path" ] && grep -q "PKG_VERSION:=0.24.1" "$gettext_makefile_path"; then
+        echo "检测到 gettext 版本为 0.24.1，正在更新 Makefiles..."
+        # 从 OpenWrt 官方仓库下载最新的 Makefile
+        curl -L -o "$gettext_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile"
+        curl -L -o "$bison_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile"
+
+
+        # https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/0001-po-update-for-gettext-0.22.patch
+        # 使用以上补丁修复rpcsvc-proto编译错误
+        local rpcsvc_proto_dir="$GITHUB_WORKSPACE/$WRT_DIR/feeds/packages/libs/rpcsvc-proto"
+        if [ -d "$rpcsvc_proto_dir" ]; then
+            local patches_dir="$rpcsvc_proto_dir/patches"
+            local patch_name="0001-po-update-for-gettext-0.22.patch"
+            local patch_url="https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/$patch_name"
+            echo "正在为 rpcsvc-proto 添加 gettext 修复补丁..."
+            mkdir -p "$patches_dir"
+            curl -L -o "$patches_dir/$patch_name" "$patch_url"
+        fi
+    fi
+}
+
+install_opkg_distfeeds
 custom_v2ray_geodata
+update_diskman
+add_quickfile
+fix_gettext_compile
