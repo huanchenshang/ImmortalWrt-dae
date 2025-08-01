@@ -133,10 +133,6 @@ UPDATE_VERSION() {
 wget "https://gist.githubusercontent.com/huanchenshang/e43c0ccf59cd9c16693887fd8e889822/raw/nginx.config" -O ../feeds/packages/net/nginx-util/files/nginx.config
 wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../package/luci-app-quickstart/luasrc/controller/istore_backend.lua
 
-# 修复 gettext 编译问题
-wget "https://raw.githubusercontent.com/immortalwrt/immortalwrt/refs/heads/master/package/libs/gettext-full/Makefile" -O $GITHUB_WORKSPACE/$WRT_DIR/package/libs/gettext-full/Makefile
-wget "https://raw.githubusercontent.com/immortalwrt/immortalwrt/refs/heads/master/tools/bison/Makefile" -O $GITHUB_WORKSPACE/$WRT_DIR/tools/bison/Makefile
-
 #删除官方的默认插件
 #rm -rf ../feeds/luci/applications/luci-app-{mosdns,dockerman,bypass*}
 #rm -rf ../feeds/packages/net/{v2ray-geodata}
@@ -219,6 +215,41 @@ update_diskman() {
     fi
 }
 
+# 移除 uhttpd 依赖
+# 当启用luci-app-quickfile插件时，表示启动nginx，所以移除luci对uhttp(luci-light)的依赖
+remove_uhttpd_dependency() {
+    local config_path="$GITHUB_WORKSPACE/$WRT_DIR/.config"
+    local luci_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/collections/luci/Makefile"
+
+    if grep -q "CONFIG_PACKAGE_luci-app-quickfile=y" "$config_path"; then
+        if [ -f "$luci_makefile_path" ]; then
+            sed -i '/luci-light/d' "$luci_makefile_path"
+            echo "Removed uhttpd (luci-light) dependency as luci-app-quickfile (nginx) is enabled."
+        fi
+    fi
+}
+
+add_quickfile() {
+    local repo_url="https://github.com/sbwml/luci-app-quickfile.git"
+    local target_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/quickfile"
+    if [ -d "$target_dir" ]; then
+        rm -rf "$target_dir"
+    fi
+    git clone --depth 1 "$repo_url" "$target_dir"
+
+    local makefile_path="$target_dir/quickfile/Makefile"
+    if [ -f "$makefile_path" ]; then
+        sed -i '/\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-\$(ARCH_PACKAGES)/c\
+\tif [ "\$(ARCH_PACKAGES)" = "x86_64" ]; then \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-x86_64 \$(1)\/usr\/bin\/quickfile; \\\
+\telse \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-aarch64_generic \$(1)\/usr\/bin\/quickfile; \\\
+\tfi' "$makefile_path"
+    fi
+}
+
 install_opkg_distfeeds
 custom_v2ray_geodata
 update_diskman
+remove_uhttpd_dependency
+add_quickfile
