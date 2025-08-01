@@ -130,8 +130,12 @@ UPDATE_VERSION() {
 #UPDATE_VERSION "sing-box"
 #UPDATE_VERSION "tailscale"
 
-wget "https://gist.githubusercontent.com/huanchenshang/df9dc4e13c6b2cd74e05227051dca0a9/raw/nginx.default.config" -O ../feeds/packages/net/nginx-util/files/nginx.config
+wget "https://gist.githubusercontent.com/huanchenshang/e43c0ccf59cd9c16693887fd8e889822/raw/nginx.config" -O ../feeds/packages/net/nginx-util/files/nginx.config
 wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../package/luci-app-quickstart/luasrc/controller/istore_backend.lua
+
+# 修复 gettext 编译问题
+wget "https://raw.githubusercontent.com/immortalwrt/immortalwrt/refs/heads/master/package/libs/gettext-full/Makefile" -O $GITHUB_WORKSPACE/$WRT_DIR/package/libs/gettext-full/Makefile
+wget "https://raw.githubusercontent.com/immortalwrt/immortalwrt/refs/heads/master/tools/bison/Makefile" -O $GITHUB_WORKSPACE/$WRT_DIR/tools/bison/Makefile
 
 #删除官方的默认插件
 #rm -rf ../feeds/luci/applications/luci-app-{mosdns,dockerman,bypass*}
@@ -215,37 +219,6 @@ update_diskman() {
     fi
 }
 
-# 修复 gettext 编译问题
-# @description: 当 gettext-full 版本为 0.24.1 时，从 OpenWrt 官方仓库更新 gettext-full 和 bison 的 Makefile 以解决编译问题。
-# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile
-# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile
-fix_gettext_compile() {
-    local gettext_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/package/libs/gettext-full/Makefile"
-    local bison_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/tools/bison/Makefile"
-
-    # 检查 gettext-full 的 Makefile 是否存在并且版本是否为 0.24.1
-    if [ -f "$gettext_makefile_path" ] && grep -q "PKG_VERSION:=0.24.1" "$gettext_makefile_path"; then
-        echo "检测到 gettext 版本为 0.24.1，正在更新 Makefiles..."
-        # 从 OpenWrt 官方仓库下载最新的 Makefile
-        curl -L -o "$gettext_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile"
-        curl -L -o "$bison_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile"
-
-
-        # https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/0001-po-update-for-gettext-0.22.patch
-        # 使用以上补丁修复rpcsvc-proto编译错误
-        local rpcsvc_proto_dir="$GITHUB_WORKSPACE/$WRT_DIR/feeds/packages/libs/rpcsvc-proto"
-        if [ -d "$rpcsvc_proto_dir" ]; then
-            local patches_dir="$rpcsvc_proto_dir/patches"
-            local patch_name="0001-po-update-for-gettext-0.22.patch"
-            local patch_url="https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/$patch_name"
-            echo "正在为 rpcsvc-proto 添加 gettext 修复补丁..."
-            mkdir -p "$patches_dir"
-            curl -L -o "$patches_dir/$patch_name" "$patch_url"
-        fi
-    fi
-}
-
 install_opkg_distfeeds
 custom_v2ray_geodata
 update_diskman
-fix_gettext_compile
