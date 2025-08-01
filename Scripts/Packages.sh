@@ -215,25 +215,6 @@ update_diskman() {
     fi
 }
 
-add_quickfile() {
-    local repo_url="https://github.com/sbwml/luci-app-quickfile.git"
-    local target_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/quickfile"
-    if [ -d "$target_dir" ]; then
-        rm -rf "$target_dir"
-    fi
-    git clone --depth 1 "$repo_url" "$target_dir"
-
-    local makefile_path="$target_dir/quickfile/Makefile"
-    if [ -f "$makefile_path" ]; then
-        sed -i '/\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-\$(ARCH_PACKAGES)/c\
-\tif [ "\$(ARCH_PACKAGES)" = "x86_64" ]; then \\\
-\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-x86_64 \$(1)\/usr\/bin\/quickfile; \\\
-\telse \\\
-\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-aarch64_generic \$(1)\/usr\/bin\/quickfile; \\\
-\tfi' "$makefile_path"
-    fi
-}
-
 # 修复 gettext 编译问题
 # @description: 当 gettext-full 版本为 0.24.1 时，从 OpenWrt 官方仓库更新 gettext-full 和 bison 的 Makefile 以解决编译问题。
 # @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile
@@ -264,23 +245,7 @@ fix_gettext_compile() {
     fi
 }
 
-# 移除 uhttpd 依赖
-# 当启用luci-app-quickfile插件时，表示启动nginx，所以移除luci对uhttp(luci-light)的依赖
-remove_uhttpd_dependency() {
-    local config_path="$GITHUB_WORKSPACE/$WRT_DIR/.config"
-    local luci_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/collections/luci/Makefile"
-
-    if grep -q "CONFIG_PACKAGE_luci-app-quickfile=y" "$config_path"; then
-        if [ -f "$luci_makefile_path" ]; then
-            sed -i '/luci-light/d' "$luci_makefile_path"
-            echo "Removed uhttpd (luci-light) dependency as luci-app-quickfile (nginx) is enabled."
-        fi
-    fi
-}
-
 install_opkg_distfeeds
 custom_v2ray_geodata
 update_diskman
-#add_quickfile
 fix_gettext_compile
-#remove_uhttpd_dependency
