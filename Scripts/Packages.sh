@@ -281,6 +281,6 @@ remove_uhttpd_dependency() {
 install_opkg_distfeeds
 custom_v2ray_geodata
 update_diskman
-add_quickfile
+#add_quickfile
 fix_gettext_compile
-remove_uhttpd_dependency
+#remove_uhttpd_dependency
