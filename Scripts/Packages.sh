@@ -305,21 +305,16 @@ update_cpufreq_config() {
 }
 
 update_argon_background() {
-    local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/img"
+    local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
     local source_path="$GITHUB_WORKSPACE/images"
     local source_file="$source_path/bg1.jpg"
     local target_file="$theme_path/bg1.jpg"
 
-    if [ -d "$theme_path" ] && [ -f "$source_file" ]; then
+    if [ -f "$source_file" ]; then
         cp -f "$source_file" "$target_file"
-        echo "Background image updated successfully at $target_file"
+        echo "背景图片更新成功：$target_file"
     else
-        if [ ! -d "$theme_path" ]; then
-            echo "Error: Theme directory not found at $theme_path"
-        fi
-        if [ ! -f "$source_file" ]; then
-            echo "Error: Source image not found at $source_file"
-        fi
+        echo "错误：未找到源图片文件：$source_file"
         return 1
     fi
 }
