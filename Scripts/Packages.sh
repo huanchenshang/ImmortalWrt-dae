@@ -278,9 +278,58 @@ fix_gettext_compile() {
     fi
 }
 
+update_argon_config() {
+    local path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-argon-config"
+    local po_file="$path/po/zh_Hans/argon-config.po"
+
+    if [ -d "$path" ] && [ -f "$po_file" ]; then
+        sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/g' "$po_file"
+        echo "Modification completed for $po_file"
+    else
+        echo "Error: Directory or PO file not found at $path"
+        return 1
+    fi
+}
+
+update_cpufreq_config() {
+    local path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-cpufreq"
+    local po_file="$path/po/zh_Hans/cpufreq.po"
+
+    if [ -d "$path" ] && [ -f "$po_file" ]; then
+        sed -i 's/msgstr "CPU 性能优化调节"/msgstr "性能调节"/g' "$po_file"
+        echo "Modification completed for $po_file"
+    else
+        echo "Error: Directory or PO file not found at $path"
+        return 1
+    fi
+}
+
+update_argon_background() {
+    local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/img"
+    local source_path="$GITHUB_WORKSPACE/images"
+    local source_file="$source_path/bg1.jpg"
+    local target_file="$theme_path/bg1.jpg"
+
+    if [ -d "$theme_path" ] && [ -f "$source_file" ]; then
+        cp -f "$source_file" "$target_file"
+        echo "Background image updated successfully at $target_file"
+    else
+        if [ ! -d "$theme_path" ]; then
+            echo "Error: Theme directory not found at $theme_path"
+        fi
+        if [ ! -f "$source_file" ]; then
+            echo "Error: Source image not found at $source_file"
+        fi
+        return 1
+    fi
+}
+
 install_opkg_distfeeds
 custom_v2ray_geodata
 update_diskman
 remove_uhttpd_dependency
 add_quickfile
 fix_gettext_compile
+update_argon_config
+update_cpufreq_config
+update_argon_background
