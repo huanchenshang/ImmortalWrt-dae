@@ -45,7 +45,7 @@ UPDATE_PACKAGE() {
 # UPDATE_PACKAGE "open-app-filter" "destan19/OpenAppFilter" "master" "" "luci-app-appfilter oaf" 这样会把原有的open-app-filter，luci-app-appfilter，oaf相关组件删除，不会出现coremark错误。
 # UPDATE_PACKAGE "包名" "项目地址" "项目分支" "pkg/name，可选，pkg为从大杂烩中单独提取包名插件；name为重命名为包名"
 
-UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-24.10"
+#UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-24.10"
 #UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "js"
 
 #proxy
@@ -305,8 +305,7 @@ update_cpufreq_config() {
 }
 
 update_argon_background() {
-    #local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
-    local theme_path="../package/luci-theme-argon/htdocs/luci-static/argon/background"
+    local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
     local source_path="$GITHUB_WORKSPACE/images"
     local source_file="$source_path/bg1.jpg"
     local target_file="$theme_path/bg1.jpg"
