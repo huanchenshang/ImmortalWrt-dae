@@ -75,18 +75,6 @@ if [ -f "$DM_FILE" ]; then
 	cd $PKG_PATH && echo "diskman has been fixed!"
 fi
 
-#修复rpcsvc-proto编译失败
-RP_PATH="../feeds/packages/libs/rpcsvc-proto"
-if [ -d "$RP_PATH" ]; then
-	echo " "
-
-	cd $RP_PATH && mkdir -p patches && cd ./patches
-
-	curl -sL -o "0001-po-update-for-gettext-0.22.patch" https://raw.githubusercontent.com/neheb/packages/refs/heads/mangix/libs/rpcsvc-proto/patches/0001-po-update-for-gettext-0.22.patch
-
-	cd $PKG_PATH && echo "rpcsvc-proto has been fixed!"
-fi
-
 # 下载 nginx 和 istore_backend 配置文件
 echo " "
 wget "https://gist.githubusercontent.com/huanchenshang/df9dc4e13c6b2cd74e05227051dca0a9/raw/nginx.default.config" -O ../feeds/packages/net/nginx-util/files/nginx.config && \
@@ -202,8 +190,39 @@ update_argon_theme() {
     fi
 }
 
+# 修复 gettext 编译问题
+# @description: 当 gettext-full 版本为 0.24.1 时，从 OpenWrt 官方仓库更新 gettext-full 和 bison 的 Makefile 以解决编译问题。
+# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile
+# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile
+fix_gettext_compile() {
+    local gettext_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/package/libs/gettext-full/Makefile"
+    local bison_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/tools/bison/Makefile"
+
+    # 检查 gettext-full 的 Makefile 是否存在并且版本是否为 0.24.1
+    if [ -f "$gettext_makefile_path" ] && grep -q "PKG_VERSION:=0.24.1" "$gettext_makefile_path"; then
+        echo "检测到 gettext 版本为 0.24.1，正在更新 Makefiles..."
+        # 从 OpenWrt 官方仓库下载最新的 Makefile
+        curl -L -o "$gettext_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile"
+        curl -L -o "$bison_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile"
+
+
+        # https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/0001-po-update-for-gettext-0.22.patch
+        # 使用以上补丁修复rpcsvc-proto编译错误
+        local rpcsvc_proto_dir="$GITHUB_WORKSPACE/$WRT_DIR/feeds/packages/libs/rpcsvc-proto"
+        if [ -d "$rpcsvc_proto_dir" ]; then
+            local patches_dir="$rpcsvc_proto_dir/patches"
+            local patch_name="0001-po-update-for-gettext-0.22.patch"
+            local patch_url="https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/$patch_name"
+            echo "正在为 rpcsvc-proto 添加 gettext 修复补丁..."
+            mkdir -p "$patches_dir"
+            curl -L -o "$patches_dir/$patch_name" "$patch_url"
+        fi
+    fi
+}
+
 install_opkg_distfeeds
 custom_v2ray_geodata
 remove_uhttpd_dependency
 update_menu_translations
 update_argon_theme
+fix_gettext_compile
