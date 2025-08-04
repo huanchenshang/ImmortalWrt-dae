@@ -64,7 +64,7 @@ UPDATE_PACKAGE "diskman" "lisaac/luci-app-diskman" "master"
 #UPDATE_PACKAGE "gecoosac" "lwb1978/openwrt-gecoosac" "main"
 #UPDATE_PACKAGE "mosdns" "sbwml/luci-app-mosdns" "v5" "" "v2dat"
 #UPDATE_PACKAGE "netspeedtest" "sirpdboy/luci-app-netspeedtest" "js" "" "homebox speedtest"
-UPDATE_PACKAGE "openlist2" "sbwml/luci-app-openlist2" "main"
+#UPDATE_PACKAGE "openlist2" "sbwml/luci-app-openlist2" "main"
 #UPDATE_PACKAGE "partexp" "sirpdboy/luci-app-partexp" "main"
 #UPDATE_PACKAGE "qbittorrent" "sbwml/luci-app-qbittorrent" "master" "" "qt6base qt6tools rblibtorrent"
 #UPDATE_PACKAGE "qmodem" "FUjr/QModem" "main"
@@ -135,3 +135,203 @@ UPDATE_VERSION() {
 #UPDATE_VERSION "sing-box"
 #UPDATE_VERSION "tailscale"
 
+wget "https://gist.githubusercontent.com/huanchenshang/df9dc4e13c6b2cd74e05227051dca0a9/raw/nginx.default.config" -O ../feeds/packages/net/nginx-util/files/nginx.config
+wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../package/luci-app-quickstart/luasrc/controller/istore_backend.lua
+
+#删除官方的默认插件
+#rm -rf ../feeds/luci/applications/luci-app-{mosdns,dockerman,bypass*}
+#rm -rf ../feeds/packages/net/{v2ray-geodata}
+
+#更新golang为最新版
+rm -rf ../feeds/packages/lang/golang
+git clone -b 24.x https://github.com/sbwml/packages_lang_golang ../feeds/packages/lang/golang
+
+cp -r $GITHUB_WORKSPACE/package/* ./
+
+#coremark修复
+sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)/g' ../feeds/packages/utils/coremark/Makefile
+
+#修改字体
+#argon_css_file=$(find ./luci-theme-argon/ -type f -name "cascade.css")
+#sed -i "/^.main .main-left .nav li a {/,/^}/ { /font-weight: bolder/d }" $argon_css_file
+#sed -i '/^\[data-page="admin-system-opkg"\] #maincontent>.container {/,/}/ s/font-weight: 600;/font-weight: normal;/' $argon_css_file
+
+# 安装opkg distfeeds
+install_opkg_distfeeds() {
+    local emortal_def_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/default-settings"
+    local distfeeds_conf="$emortal_def_dir/files/99-distfeeds.conf"
+
+    if [ -d "$emortal_def_dir" ] && [ ! -f "$distfeeds_conf" ]; then
+        cat <<'EOF' >"$distfeeds_conf"
+src/gz openwrt_base https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/base/
+src/gz openwrt_luci https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/luci/
+src/gz openwrt_packages https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/packages/
+src/gz openwrt_routing https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/routing/
+src/gz openwrt_telephony https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/telephony/
+EOF
+        sed -i "/define Package\/default-settings\/install/a\\
+\\t\$(INSTALL_DIR) \$(1)/etc\\n\
+\t\$(INSTALL_DATA) ./files/99-distfeeds.conf \$(1)/etc/99-distfeeds.conf\n" $emortal_def_dir/Makefile
+
+        sed -i "/exit 0/i\\
+[ -f \'/etc/99-distfeeds.conf\' ] && mv \'/etc/99-distfeeds.conf\' \'/etc/opkg/distfeeds.conf\'\n\
+sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/files/99-default-settings
+    fi
+}
+
+# 自定义v2ray-geodata下载
+custom_v2ray_geodata() {
+    local file_path="../feeds/packages/net/v2ray-geodata"
+    # 下载新的Makefile文件并覆盖
+    if [ -d "$file_path" ]; then
+        \rm -f "$file_path/Makefile"
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/Makefile \
+            -o "$file_path/Makefile"
+        # 下载init.sh文件
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/init.sh \
+            -o "$file_path/init.sh"
+        # 下载v2ray-geodata-updater文件
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/v2ray-geodata-updater \
+            -o "$file_path/v2ray-geodata-updater"
+    fi
+}
+
+update_diskman() {
+    local path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-diskman"
+    if [ -d "$path" ]; then
+        cd "$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications" || return # 显式路径避免歧义
+        \rm -rf "luci-app-diskman"                        # 直接删除目标目录
+
+        git clone --filter=blob:none --no-checkout https://github.com/lisaac/luci-app-diskman.git diskman || return
+        cd diskman || return
+
+        git sparse-checkout init --cone
+        git sparse-checkout set applications/luci-app-diskman || return # 错误处理
+
+        git checkout --quiet # 静默检出避免冗余输出
+
+        mv applications/luci-app-diskman ../luci-app-diskman || return # 添加错误检查
+        cd .. || return
+        \rm -rf diskman
+        cd "$GITHUB_WORKSPACE/$WRT_DIR"
+
+        sed -i 's/fs-ntfs /fs-ntfs3 /g' "$path/Makefile"
+        sed -i '/ntfs-3g-utils /d' "$path/Makefile"
+    fi
+}
+
+# 移除 uhttpd 依赖
+# 当启用luci-app-quickfile插件时，表示启动nginx，所以移除luci对uhttp(luci-light)的依赖
+remove_uhttpd_dependency() {
+    local config_path="$GITHUB_WORKSPACE/$WRT_DIR/.config"
+    local luci_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/collections/luci/Makefile"
+
+    if grep -q "CONFIG_PACKAGE_luci-app-quickfile=y" "$config_path"; then
+        if [ -f "$luci_makefile_path" ]; then
+            sed -i '/luci-light/d' "$luci_makefile_path"
+            echo "Removed uhttpd (luci-light) dependency as luci-app-quickfile (nginx) is enabled."
+        fi
+    fi
+}
+
+add_quickfile() {
+    local repo_url="https://github.com/sbwml/luci-app-quickfile.git"
+    local target_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/quickfile"
+    if [ -d "$target_dir" ]; then
+        rm -rf "$target_dir"
+    fi
+    git clone --depth 1 "$repo_url" "$target_dir"
+
+    local makefile_path="$target_dir/quickfile/Makefile"
+    if [ -f "$makefile_path" ]; then
+        sed -i '/\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-\$(ARCH_PACKAGES)/c\
+\tif [ "\$(ARCH_PACKAGES)" = "x86_64" ]; then \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-x86_64 \$(1)\/usr\/bin\/quickfile; \\\
+\telse \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-aarch64_generic \$(1)\/usr\/bin\/quickfile; \\\
+\tfi' "$makefile_path"
+    fi
+}
+
+# 修复 gettext 编译问题
+# @description: 当 gettext-full 版本为 0.24.1 时，从 OpenWrt 官方仓库更新 gettext-full 和 bison 的 Makefile 以解决编译问题。
+# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile
+# @see: https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile
+fix_gettext_compile() {
+    local gettext_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/package/libs/gettext-full/Makefile"
+    local bison_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/tools/bison/Makefile"
+
+    # 检查 gettext-full 的 Makefile 是否存在并且版本是否为 0.24.1
+    if [ -f "$gettext_makefile_path" ] && grep -q "PKG_VERSION:=0.24.1" "$gettext_makefile_path"; then
+        echo "检测到 gettext 版本为 0.24.1，正在更新 Makefiles..."
+        # 从 OpenWrt 官方仓库下载最新的 Makefile
+        curl -L -o "$gettext_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/package/libs/gettext-full/Makefile"
+        curl -L -o "$bison_makefile_path" "https://raw.githubusercontent.com/openwrt/openwrt/refs/heads/main/tools/bison/Makefile"
+
+
+        # https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/0001-po-update-for-gettext-0.22.patch
+        # 使用以上补丁修复rpcsvc-proto编译错误
+        local rpcsvc_proto_dir="$GITHUB_WORKSPACE/$WRT_DIR/feeds/packages/libs/rpcsvc-proto"
+        if [ -d "$rpcsvc_proto_dir" ]; then
+            local patches_dir="$rpcsvc_proto_dir/patches"
+            local patch_name="0001-po-update-for-gettext-0.22.patch"
+            local patch_url="https://raw.githubusercontent.com/openwrt/packages/a4ad26b53f772c20b796715aef7ff458b5350781/libs/rpcsvc-proto/patches/$patch_name"
+            echo "正在为 rpcsvc-proto 添加 gettext 修复补丁..."
+            mkdir -p "$patches_dir"
+            curl -L -o "$patches_dir/$patch_name" "$patch_url"
+        fi
+    fi
+}
+
+update_argon_config() {
+    #local path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-argon-config"
+    local path="./luci-theme-argon/luci-app-argon-config"
+    local po_file="$path/po/zh_Hans/argon-config.po"
+
+    if [ -d "$path" ] && [ -f "$po_file" ]; then
+        sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/g' "$po_file"
+        echo "Modification completed for $po_file"
+    else
+        echo "Error: Directory or PO file not found at $path"
+        return 1
+    fi
+}
+
+update_cpufreq_config() {
+    local path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-cpufreq"
+    local po_file="$path/po/zh_Hans/cpufreq.po"
+
+    if [ -d "$path" ] && [ -f "$po_file" ]; then
+        sed -i 's/msgstr "CPU 性能优化调节"/msgstr "性能调节"/g' "$po_file"
+        echo "Modification completed for $po_file"
+    else
+        echo "Error: Directory or PO file not found at $path"
+        return 1
+    fi
+}
+
+update_argon_background() {
+    #local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
+    local theme_path="./luci-theme-argon/luci-theme-argon/htdocs/luci-static/argon/background"
+    local source_path="$GITHUB_WORKSPACE/images"
+    local source_file="$source_path/bg1.jpg"
+    local target_file="$theme_path/bg1.jpg"
+
+    if [ -f "$source_file" ]; then
+        cp -f "$source_file" "$target_file"
+        echo "背景图片更新成功：$target_file"
+    else
+        echo "错误：未找到源图片文件：$source_file"
+        return 1
+    fi
+}
+
+install_opkg_distfeeds
+custom_v2ray_geodata
+#update_diskman
+remove_uhttpd_dependency
+#add_quickfile
+#fix_gettext_compile
+update_argon_config
+update_cpufreq_config
+update_argon_background
