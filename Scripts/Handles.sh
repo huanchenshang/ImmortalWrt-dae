@@ -151,7 +151,8 @@ remove_uhttpd_dependency() {
 
 #修改菜单名称显示
 update_menu_translations() {
-    local argon_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-argon-config"
+    #local argon_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-argon-config"
+    local argon_path="./luci-theme-argon/luci-app-argon-config"
     local argon_po_file="$argon_path/po/zh_Hans/argon-config.po"
     local cpufreq_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-cpufreq"
     local cpufreq_po_file="$cpufreq_path/po/zh_Hans/cpufreq.po"
@@ -178,7 +179,8 @@ update_argon_theme() {
         sed -i "/font-weight:/ { /important/! { /\/\*/! s/:.*/: var(--font-weight);/ } }" $(find ./luci-theme-argon -type f -iname "*.css")
 
         # 修改背景图片
-        local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
+        #local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
+	local theme_path="./luci-theme-argon/luci-theme-argon/htdocs/luci-static/argon/background"
         local source_file="$GITHUB_WORKSPACE/images/bg1.jpg"
         local target_file="$theme_path/bg1.jpg"
         if [ -f "$source_file" ] && [ -d "$theme_path" ]; then
