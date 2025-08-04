@@ -85,3 +85,124 @@ if [ -d "$RP_PATH" ]; then
 
 	cd $PKG_PATH && echo "rpcsvc-proto has been fixed!"
 fi
+
+# 下载 nginx 和 istore_backend 配置文件
+echo " "
+wget "https://gist.githubusercontent.com/huanchenshang/df9dc4e13c6b2cd74e05227051dca0a9/raw/nginx.default.config" -O ../feeds/packages/net/nginx-util/files/nginx.config && \
+wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../package/luci-app-quickstart/luasrc/controller/istore_backend.lua && \
+echo "nginx 和 istore_backend 配置文件已更新！"
+
+# 更新 golang 为最新版
+echo " "
+rm -rf ../feeds/packages/lang/golang
+git clone -b 24.x https://github.com/sbwml/packages_lang_golang ../feeds/packages/lang/golang && \
+echo "golang 已更新到 24.x！"
+
+# 修复 coremark 编译失败
+CM_FILE="../feeds/packages/utils/coremark/Makefile"
+if [ -f "$CM_FILE" ]; then
+    echo " "
+    sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)/g' $CM_FILE
+    cd $PKG_PATH && echo "coremark 已修复！"
+fi
+
+#添加ipk软件源
+install_opkg_distfeeds() {
+    local emortal_def_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/default-settings"
+    local distfeeds_conf="$emortal_def_dir/files/99-distfeeds.conf"
+
+    if [ -d "$emortal_def_dir" ] && [ ! -f "$distfeeds_conf" ]; then
+        echo " "
+        cat <<'EOF' >"$distfeeds_conf"
+src/gz openwrt_base https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/base/
+src/gz openwrt_luci https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/luci/
+src/gz openwrt_packages https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/packages/
+src/gz openwrt_routing https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/routing/
+src/gz openwrt_telephony https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/telephony/
+EOF
+        sed -i "/define Package\/default-settings\/install/a\\
+\\t\$(INSTALL_DIR) \$(1)/etc\\n\
+\t\$(INSTALL_DATA) ./files/99-distfeeds.conf \$(1)/etc/99-distfeeds.conf\n" $emortal_def_dir/Makefile
+
+        sed -i "/exit 0/i\\
+[ -f \'/etc/99-distfeeds.conf\' ] && mv \'/etc/99-distfeeds.conf\' \'/etc/opkg/distfeeds.conf\'\n\
+sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/files/99-default-settings
+
+        cd $PKG_PATH && echo "opkg distfeeds has been installed!"
+    fi
+}
+
+#自定义v2ray-geodata
+custom_v2ray_geodata() {
+    local file_path="../feeds/packages/net/v2ray-geodata"
+    if [ -d "$file_path" ]; then
+        echo " "
+        \rm -f "$file_path/Makefile"
+        curl -sL https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/Makefile -o "$file_path/Makefile"
+        curl -sL https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/init.sh -o "$file_path/init.sh"
+        curl -sL https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/v2ray-geodata-updater -o "$file_path/v2ray-geodata-updater"
+        
+        cd $PKG_PATH && echo "v2ray-geodata has been fixed!"
+    fi
+}
+
+#移除uhttpd依赖
+remove_uhttpd_dependency() {
+    local config_path="$GITHUB_WORKSPACE/$WRT_DIR/.config"
+    local luci_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/collections/luci/Makefile"
+
+    if grep -q "CONFIG_PACKAGE_luci-app-quickfile=y" "$config_path"; then
+        if [ -f "$luci_makefile_path" ]; then
+            echo " "
+            sed -i '/luci-light/d' "$luci_makefile_path"
+            cd $PKG_PATH && echo "luci uhttpd dependency has been fixed!"
+        fi
+    fi
+}
+
+#修改菜单名称显示
+update_menu_translations() {
+    local argon_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-argon-config"
+    local argon_po_file="$argon_path/po/zh_Hans/argon-config.po"
+    local cpufreq_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-cpufreq"
+    local cpufreq_po_file="$cpufreq_path/po/zh_Hans/cpufreq.po"
+
+    if [ -d "$argon_path" ] && [ -f "$argon_po_file" ]; then
+        echo " "
+        sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/g' "$argon_po_file"
+        cd $PKG_PATH && echo "argon-config translation has been fixed!"
+    fi
+
+    if [ -d "$cpufreq_path" ] && [ -f "$cpufreq_po_file" ]; then
+        echo " "
+        sed -i 's/msgstr "CPU 性能优化调节"/msgstr "性能调节"/g' "$cpufreq_po_file"
+        cd $PKG_PATH && echo "cpufreq translation has been fixed!"
+    fi
+}
+
+update_argon_theme() {
+    if [ -d *"luci-theme-argon"* ]; then
+        echo " "
+        cd ./luci-theme-argon/
+
+        # 修改字体权重
+        sed -i "/font-weight:/ { /important/! { /\/\*/! s/:.*/: var(--font-weight);/ } }" $(find ./luci-theme-argon -type f -iname "*.css")
+
+        # 修改背景图片
+        local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
+        local source_file="$GITHUB_WORKSPACE/images/bg1.jpg"
+        local target_file="$theme_path/bg1.jpg"
+        if [ -f "$source_file" ] && [ -d "$theme_path" ]; then
+            cp -f "$source_file" "$target_file"
+            cd $PKG_PATH && echo "argon background has been updated!"
+        fi
+	
+        cd $PKG_PATH && echo "theme-argon has been fixed!"
+    fi
+}
+
+install_opkg_distfeeds
+custom_v2ray_geodata
+remove_uhttpd_dependency
+update_menu_translations
+update_argon_theme
