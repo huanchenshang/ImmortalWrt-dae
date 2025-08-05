@@ -331,7 +331,7 @@ custom_v2ray_geodata
 #update_diskman
 remove_uhttpd_dependency
 #add_quickfile
-fix_gettext_compile
+#fix_gettext_compile
 update_argon_config
 update_cpufreq_config
 update_argon_background
