@@ -75,3 +75,160 @@ if [ -f "$DM_FILE" ]; then
 	cd $PKG_PATH && echo "diskman has been fixed!"
 fi
 
+#设置nginx默认配置和修复quickstart温度显示
+wget "https://gist.githubusercontent.com/huanchenshang/df9dc4e13c6b2cd74e05227051dca0a9/raw/nginx.default.config" -O ../feeds/packages/net/nginx-util/files/nginx.config
+wget "https://gist.githubusercontent.com/puteulanus/1c180fae6bccd25e57eb6d30b7aa28aa/raw/istore_backend.lua" -O ../package/luci-app-quickstart/luasrc/controller/istore_backend.lua
+
+#更新golang为最新版
+rm -rf ../feeds/packages/lang/golang
+git clone -b 24.x https://github.com/sbwml/packages_lang_golang ../feeds/packages/lang/golang
+
+#coremark修复
+sed -i 's/mkdir \$(PKG_BUILD_DIR)\/\$(ARCH)/mkdir -p \$(PKG_BUILD_DIR)\/\$(ARCH)/g' ../feeds/packages/utils/coremark/Makefile
+
+# 安装opkg distfeeds
+install_opkg_distfeeds() {
+    local emortal_def_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/default-settings"
+    local distfeeds_conf="$emortal_def_dir/files/99-distfeeds.conf"
+
+    if [ -d "$emortal_def_dir" ] && [ ! -f "$distfeeds_conf" ]; then
+        cat <<'EOF' >"$distfeeds_conf"
+src/gz openwrt_base https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/base/
+src/gz openwrt_luci https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/luci/
+src/gz openwrt_packages https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/packages/
+src/gz openwrt_routing https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/routing/
+src/gz openwrt_telephony https://downloads.immortalwrt.org/releases/24.10-SNAPSHOT/packages/aarch64_cortex-a53/telephony/
+EOF
+        sed -i "/define Package\/default-settings\/install/a\\
+\\t\$(INSTALL_DIR) \$(1)/etc\\n\
+\t\$(INSTALL_DATA) ./files/99-distfeeds.conf \$(1)/etc/99-distfeeds.conf\n" $emortal_def_dir/Makefile
+
+        sed -i "/exit 0/i\\
+[ -f \'/etc/99-distfeeds.conf\' ] && mv \'/etc/99-distfeeds.conf\' \'/etc/opkg/distfeeds.conf\'\n\
+sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" $emortal_def_dir/files/99-default-settings
+    fi
+}
+
+# 自定义v2ray-geodata下载
+custom_v2ray_geodata() {
+    local file_path="../feeds/packages/net/v2ray-geodata"
+    # 下载新的Makefile文件并覆盖
+    if [ -d "$file_path" ]; then
+        \rm -f "$file_path/Makefile"
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/Makefile \
+            -o "$file_path/Makefile"
+        # 下载init.sh文件
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/init.sh \
+            -o "$file_path/init.sh"
+        # 下载v2ray-geodata-updater文件
+        curl -L https://raw.githubusercontent.com/huanchenshang/ImmortalWrt-dae/refs/heads/main/package/v2ray-geodata/v2ray-geodata-updater \
+            -o "$file_path/v2ray-geodata-updater"
+    fi
+}
+
+# 移除 uhttpd 依赖
+# 当启用luci-app-quickfile插件时，表示启动nginx，所以移除luci对uhttp(luci-light)的依赖
+remove_uhttpd_dependency() {
+    local config_path="$GITHUB_WORKSPACE/$WRT_DIR/.config"
+    local luci_makefile_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/collections/luci/Makefile"
+
+    if grep -q "CONFIG_PACKAGE_luci-app-quickfile=y" "$config_path"; then
+        if [ -f "$luci_makefile_path" ]; then
+            sed -i '/luci-light/d' "$luci_makefile_path"
+            echo "Removed uhttpd (luci-light) dependency as luci-app-quickfile (nginx) is enabled."
+        fi
+    fi
+}
+
+#添加quickfile文件管理
+add_quickfile() {
+    local repo_url="https://github.com/sbwml/luci-app-quickfile.git"
+    local target_dir="$GITHUB_WORKSPACE/$WRT_DIR/package/emortal/quickfile"
+    if [ -d "$target_dir" ]; then
+        rm -rf "$target_dir"
+    fi
+    git clone --depth 1 "$repo_url" "$target_dir"
+
+    local makefile_path="$target_dir/quickfile/Makefile"
+    if [ -f "$makefile_path" ]; then
+        sed -i '/\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-\$(ARCH_PACKAGES)/c\
+\tif [ "\$(ARCH_PACKAGES)" = "x86_64" ]; then \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-x86_64 \$(1)\/usr\/bin\/quickfile; \\\
+\telse \\\
+\t\t\$(INSTALL_BIN) \$(PKG_BUILD_DIR)\/quickfile-aarch64_generic \$(1)\/usr\/bin\/quickfile; \\\
+\tfi' "$makefile_path"
+    fi
+}
+
+#修改Argon 主题设置名称显示
+update_argon_config() {
+    #local path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-argon-config"
+    local path="./luci-theme-argon/luci-app-argon-config"
+    local po_file="$path/po/zh_Hans/argon-config.po"
+
+    if [ -d "$path" ] && [ -f "$po_file" ]; then
+        sed -i 's/msgstr "Argon 主题设置"/msgstr "主题设置"/g' "$po_file"
+        echo "Modification completed for $po_file"
+    else
+        echo "Error: Directory or PO file not found at $path"
+        return 1
+    fi
+}
+
+#修改CPU 性能优化调节名称显示
+update_cpufreq_config() {
+    local path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/applications/luci-app-cpufreq"
+    local po_file="$path/po/zh_Hans/cpufreq.po"
+
+    if [ -d "$path" ] && [ -f "$po_file" ]; then
+        sed -i 's/msgstr "CPU 性能优化调节"/msgstr "性能调节"/g' "$po_file"
+        echo "Modification completed for $po_file"
+    else
+        echo "Error: Directory or PO file not found at $path"
+        return 1
+    fi
+}
+
+#修改argon背景图片
+update_argon_background() {
+    local theme_path="$GITHUB_WORKSPACE/$WRT_DIR/feeds/luci/themes/luci-theme-argon/htdocs/luci-static/argon/background"
+    #local theme_path="./luci-theme-argon/luci-theme-argon/htdocs/luci-static/argon/background"
+    local source_path="$GITHUB_WORKSPACE/images"
+    local source_file="$source_path/bg1.jpg"
+    local target_file="$theme_path/bg1.jpg"
+
+    if [ -f "$source_file" ]; then
+        cp -f "$source_file" "$target_file"
+        echo "背景图片更新成功：$target_file"
+    else
+        echo "错误：未找到源图片文件：$source_file"
+        return 1
+    fi
+}
+
+#更换argon源
+update_argon() {
+    local repo_url="https://github.com/jjm2473/luci-theme-argon.git"
+    local dst_theme_path="../feeds/luci/themes/luci-theme-argon"
+    local tmp_dir=$(mktemp -d)
+
+    echo "正在更新 argon 主题..."
+
+    git clone --depth 1 "$repo_url" "$tmp_dir"
+
+    rm -rf "$dst_theme_path"
+    rm -rf "$tmp_dir/.git"
+    mv "$tmp_dir" "$dst_theme_path"
+
+    echo "luci-theme-argon 更新完成"
+    echo "Argon 更新完毕。"
+}
+
+install_opkg_distfeeds
+custom_v2ray_geodata
+remove_uhttpd_dependency
+add_quickfile
+update_argon_config
+update_cpufreq_config
+update_argon
+update_argon_background
